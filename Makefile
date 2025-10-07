@@ -52,6 +52,9 @@ lint: check-linter-version
 tests:
 	go test -race -timeout 210s ./...
 
+tests-failfast:
+	GODEBUG=netdns=cgo go test -race -timeout 360s -failfast ./... | tee tests-failfast-$$(date +'%H:%M:%S').log
+
 ## check: Runs the linters and tests.
 check: lint tests
 

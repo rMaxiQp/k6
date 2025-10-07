@@ -64,7 +64,7 @@ func newTestNetworkManager(t *testing.T, k6opts k6lib.Options) (*NetworkManager,
 	ctx := vu.Context()
 	st := vu.State()
 	st.Options = k6opts
-	logger := log.New(st.Logger, "")
+	logger := log.New(st.Logger, "", ctx)
 	timeoutSettings := NewTimeoutSettings(nil)
 	frameManager := NewFrameManager(ctx, nil, nil, timeoutSettings, logger)
 

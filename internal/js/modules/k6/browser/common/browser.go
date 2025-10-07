@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -124,11 +125,27 @@ func newBrowser(
 	// cleanup messages to be sent to chromium.
 	ctx, cancelFn := context.WithCancel(ctx)
 
+	pc, file, line, ok := runtime.Caller(5)
+	if ok {
+		f := runtime.FuncForPC(pc)
+		fmt.Printf("Context %p VU Context %p: %s[%s:%d]\n", ctx, vuCtx, f.Name(), file, line)
+	}
+
+	cancel := func() {
+		fmt.Printf("Context %p VU Context %p: canceling browser context\n", ctx, vuCtx)
+		cancelFn()
+	}
+
+	vuCancel := func() {
+		fmt.Printf("Context %p VU Context %p: canceling VU context\n", ctx, vuCtx)
+		vuCtxCancelFn()
+	}
+
 	return &Browser{
 		browserCtx:          ctx,
-		browserCancelFn:     cancelFn,
+		browserCancelFn:     cancel,
 		vuCtx:               vuCtx,
-		vuCtxCancelFn:       vuCtxCancelFn,
+		vuCtxCancelFn:       vuCancel,
 		state:               BrowserStateOpen,
 		browserProc:         browserProc,
 		browserOpts:         browserOpts,
@@ -532,18 +549,18 @@ func (b *Browser) Close() {
 
 	defer func() {
 		if err := b.browserProc.Cleanup(); err != nil {
-			b.logger.Errorf("Browser:Close", "cleaning up the user data directory: %v", err)
+			b.logger.Errorf("Browser:Close", "ctx %p cleaning up the user data directory: %v", b.browserCtx, err)
 		}
 	}()
 	defer func() {
 		for _, fn := range b.runOnClose {
 			if err := fn(); err != nil {
-				b.logger.Errorf("Browser:Close", "running cleanup function: %v", err)
+				b.logger.Errorf("Browser:Close", "ctx %p running cleanup function: %v", b.browserCtx, err)
 			}
 		}
 	}()
 
-	b.logger.Debugf("Browser:Close", "")
+	b.logger.Debugf("Browser:Close", "ctx %p", b.browserCtx)
 	atomic.CompareAndSwapInt64(&b.state, b.state, BrowserStateClosed)
 
 	// Signal to the connection and the process that we're gracefully closing.
@@ -578,7 +595,7 @@ func (b *Browser) Close() {
 	select {
 	case <-b.browserProc.processDone:
 	case <-time.After(timeout):
-		b.logger.Debugf("Browser:Close", "killing browser process with PID %d after %s", b.browserProc.Pid(), timeout)
+		b.logger.Debugf("Browser:Close", "ctx %p killing browser process with PID %d after %s", b.browserCtx, b.browserProc.Pid(), timeout)
 		b.browserProc.Terminate()
 	}
 

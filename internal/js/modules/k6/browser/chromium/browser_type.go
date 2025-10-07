@@ -77,9 +77,9 @@ func (b *BrowserType) init(
 	if err := logger.SetCategoryFilter(browserOpts.LogCategoryFilter); err != nil {
 		return nil, nil, nil, fmt.Errorf("error setting category filter: %w", err)
 	}
-	if browserOpts.Debug {
-		_ = logger.SetLevel("debug")
-	}
+	// if browserOpts.Debug {
+	_ = logger.SetLevel("debug")
+	// }
 
 	return ctx, browserOpts, logger, nil
 }
@@ -109,6 +109,7 @@ func (b *BrowserType) Connect(ctx, vuCtx context.Context, wsEndpoint string) (*c
 		return nil, fmt.Errorf("initializing browser type: %w", err)
 	}
 
+	fmt.Printf("Context %p VU Context %p: connecting to browser at %s\n", ctx, vuCtx, wsEndpoint)
 	bp, err := b.connect(ctx, vuCtx, wsEndpoint, browserOpts, logger)
 	if err != nil {
 		err = &k6ext.UserFriendlyError{
@@ -175,6 +176,7 @@ func (b *BrowserType) Launch(ctx, vuCtx context.Context) (_ *common.Browser, bro
 		return nil, 0, fmt.Errorf("initializing browser type: %w", err)
 	}
 
+	fmt.Printf("Context %p VU Context %p: launching browser\n", ctx, vuCtx)
 	bp, pid, err := b.launch(ctx, vuCtx, browserOpts, logger)
 	if err != nil {
 		err = &k6ext.UserFriendlyError{
@@ -470,7 +472,7 @@ func setFlagsFromK6Options(flags map[string]any, k6opts *k6lib.Options) error {
 func makeLogger(ctx context.Context, envLookup env.LookupFunc) (*log.Logger, error) {
 	var (
 		k6Logger = k6ext.GetVU(ctx).State().Logger
-		logger   = log.New(k6Logger, common.GetIterationID(ctx))
+		logger   = log.New(k6Logger, common.GetIterationID(ctx), ctx)
 	)
 	if el, ok := envLookup(env.LogLevel); ok {
 		if logger.SetLevel(el) != nil {

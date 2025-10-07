@@ -2,6 +2,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"regexp"
@@ -18,6 +19,7 @@ type Logger struct {
 	lastLogCall    int64
 	iterID         string
 	categoryFilter *regexp.Regexp
+	ctx            context.Context
 }
 
 // NewNullLogger will create a logger where log lines will
@@ -25,20 +27,21 @@ type Logger struct {
 func NewNullLogger() *Logger {
 	log := logrus.New()
 	log.SetOutput(io.Discard)
-	return New(log, "")
+	return New(log, "", context.Background())
 }
 
 // New creates a new logger.
-func New(logger logrus.FieldLogger, iterID string) *Logger {
+func New(logger logrus.FieldLogger, iterID string, ctx context.Context) *Logger {
 	ll := &Logger{
 		Logger: logrus.New(),
 		iterID: iterID,
+		ctx:    ctx,
 	}
 
 	if logger == nil {
-		ll.Warnf("Logger", "no logger supplied, using default")
+		ll.Warnf("Logger", "[ctx %p] no logger supplied, using default", ctx)
 	} else if l, ok := logger.(*logrus.Logger); !ok { //nolint:forbidigo
-		ll.Warnf("Logger", "invalid logger type %T, using default", logger)
+		ll.Warnf("Logger", "[ctx %p] invalid logger type %T, using default", ctx, logger)
 	} else {
 		ll.Logger = l
 	}
@@ -48,27 +51,48 @@ func New(logger logrus.FieldLogger, iterID string) *Logger {
 
 // Tracef logs a trace message.
 func (l *Logger) Tracef(category string, msg string, args ...any) {
-	l.Logf(logrus.TraceLevel, category, msg, args...)
+	m := msg
+	if l.ctx != nil {
+		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+	}
+	l.Logf(logrus.TraceLevel, category, m, args...)
 }
 
 // Debugf logs a debug message.
 func (l *Logger) Debugf(category string, msg string, args ...any) {
-	l.Logf(logrus.DebugLevel, category, msg, args...)
+	m := msg
+	if l.ctx != nil {
+		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+	}
+	fmt.Printf("DEBUG: "+m+"\n", args...)
+	l.Logf(logrus.DebugLevel, category, m, args...)
 }
 
 // Errorf logs an error message.
 func (l *Logger) Errorf(category string, msg string, args ...any) {
-	l.Logf(logrus.ErrorLevel, category, msg, args...)
+	m := msg
+	if l.ctx != nil {
+		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+	}
+	l.Logf(logrus.ErrorLevel, category, m, args...)
 }
 
 // Infof logs an info message.
 func (l *Logger) Infof(category string, msg string, args ...any) {
-	l.Logf(logrus.InfoLevel, category, msg, args...)
+	m := msg
+	if l.ctx != nil {
+		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+	}
+	l.Logf(logrus.InfoLevel, category, m, args...)
 }
 
 // Warnf logs an warning message.
 func (l *Logger) Warnf(category string, msg string, args ...any) {
-	l.Logf(logrus.WarnLevel, category, msg, args...)
+	m := msg
+	if l.ctx != nil {
+		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+	}
+	l.Logf(logrus.WarnLevel, category, m, args...)
 }
 
 // Logf logs a message.

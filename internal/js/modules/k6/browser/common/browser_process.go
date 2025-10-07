@@ -184,15 +184,15 @@ func execute(
 		// TODO: How to handle these errors?
 		defer func() {
 			if err := dataDir.Cleanup(); err != nil {
-				logger.Errorf("browser", "cleaning up the user data directory: %v", err)
+				logger.Errorf("browser", "ctx:%p, cleaning up the user data directory: %v", ctx, err)
 			}
 			close(done)
 		}()
 
 		if err := cmd.Wait(); err != nil {
 			logger.Errorf("browser",
-				"process with PID %d unexpectedly ended: %v",
-				cmd.Process.Pid, err)
+				"ctx:%p, process with PID %d unexpectedly ended: %v",
+				ctx, cmd.Process.Pid, err)
 		}
 	}()
 
