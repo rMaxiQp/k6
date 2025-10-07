@@ -39,9 +39,9 @@ func New(logger logrus.FieldLogger, iterID string, ctx context.Context) *Logger 
 	}
 
 	if logger == nil {
-		ll.Warnf("Logger", "[ctx %p] no logger supplied, using default", ctx)
+		ll.Warnf("Logger", "[ctx %v] no logger supplied, using default", ctx)
 	} else if l, ok := logger.(*logrus.Logger); !ok { //nolint:forbidigo
-		ll.Warnf("Logger", "[ctx %p] invalid logger type %T, using default", ctx, logger)
+		ll.Warnf("Logger", "[ctx %v] invalid logger type %T, using default", ctx, logger)
 	} else {
 		ll.Logger = l
 	}
@@ -51,18 +51,38 @@ func New(logger logrus.FieldLogger, iterID string, ctx context.Context) *Logger 
 
 // Tracef logs a trace message.
 func (l *Logger) Tracef(category string, msg string, args ...any) {
+	if l == nil {
+		pc, file, line, ok := runtime.Caller(4)
+		if !ok {
+			fmt.Printf("Trace: Logger is nil, unable to log: "+msg+"\n", args...)
+			return
+		}
+		fn := runtime.FuncForPC(pc)
+		fmt.Printf("Trace: Logger is nil, unable to log: %s:%d %s: "+msg+"\n", append([]any{file, line, fn.Name()}, args...)...) //nolint:forbidigo
+		return
+	}
 	m := msg
 	if l.ctx != nil {
-		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+		m = fmt.Sprintf("[ctx %v] %s", l.ctx, msg)
 	}
 	l.Logf(logrus.TraceLevel, category, m, args...)
 }
 
 // Debugf logs a debug message.
 func (l *Logger) Debugf(category string, msg string, args ...any) {
+	if l == nil {
+		pc, file, line, ok := runtime.Caller(4)
+		if !ok {
+			fmt.Printf("Debug: Logger is nil, unable to log: "+msg+"\n", args...)
+			return
+		}
+		fn := runtime.FuncForPC(pc)
+		fmt.Printf("Debug: Logger is nil, unable to log: %s:%d %s: "+msg+"\n", append([]any{file, line, fn.Name()}, args...)...) //nolint:forbidigo
+		return
+	}
 	m := msg
 	if l.ctx != nil {
-		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+		m = fmt.Sprintf("[ctx %v] %s", l.ctx, msg)
 	}
 	fmt.Printf("DEBUG: "+m+"\n", args...)
 	l.Logf(logrus.DebugLevel, category, m, args...)
@@ -70,27 +90,57 @@ func (l *Logger) Debugf(category string, msg string, args ...any) {
 
 // Errorf logs an error message.
 func (l *Logger) Errorf(category string, msg string, args ...any) {
+	if l == nil {
+		pc, file, line, ok := runtime.Caller(4)
+		if !ok {
+			fmt.Printf("Error: Logger is nil, unable to log: "+msg+"\n", args...)
+			return
+		}
+		fn := runtime.FuncForPC(pc)
+		fmt.Printf("Error: Logger is nil, unable to log: %s:%d %s: "+msg+"\n", append([]any{file, line, fn.Name()}, args...)...) //nolint:forbidigo
+		return
+	}
 	m := msg
 	if l.ctx != nil {
-		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+		m = fmt.Sprintf("[ctx %v] %s", l.ctx, msg)
 	}
 	l.Logf(logrus.ErrorLevel, category, m, args...)
 }
 
 // Infof logs an info message.
 func (l *Logger) Infof(category string, msg string, args ...any) {
+	if l == nil {
+		pc, file, line, ok := runtime.Caller(4)
+		if !ok {
+			fmt.Printf("Info: Logger is nil, unable to log: "+msg+"\n", args...)
+			return
+		}
+		fn := runtime.FuncForPC(pc)
+		fmt.Printf("Info: Logger is nil, unable to log: %s:%d %s: "+msg+"\n", append([]any{file, line, fn.Name()}, args...)...) //nolint:forbidigo
+		return
+	}
 	m := msg
 	if l.ctx != nil {
-		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+		m = fmt.Sprintf("[ctx %v] %s", l.ctx, msg)
 	}
 	l.Logf(logrus.InfoLevel, category, m, args...)
 }
 
 // Warnf logs an warning message.
 func (l *Logger) Warnf(category string, msg string, args ...any) {
+	if l == nil {
+		pc, file, line, ok := runtime.Caller(4)
+		if !ok {
+			fmt.Printf("Warning: Logger is nil, unable to log: "+msg+"\n", args...)
+			return
+		}
+		fn := runtime.FuncForPC(pc)
+		fmt.Printf("Warning: Logger is nil, unable to log: %s:%d %s: "+msg+"\n", append([]any{file, line, fn.Name()}, args...)...) //nolint:forbidigo
+		return
+	}
 	m := msg
 	if l.ctx != nil {
-		m = fmt.Sprintf("[ctx %p] %s", l.ctx, msg)
+		m = fmt.Sprintf("[ctx %v] %s", l.ctx, msg)
 	}
 	l.Logf(logrus.WarnLevel, category, m, args...)
 }

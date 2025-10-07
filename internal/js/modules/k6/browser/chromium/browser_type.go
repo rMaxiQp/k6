@@ -77,9 +77,9 @@ func (b *BrowserType) init(
 	if err := logger.SetCategoryFilter(browserOpts.LogCategoryFilter); err != nil {
 		return nil, nil, nil, fmt.Errorf("error setting category filter: %w", err)
 	}
-	// if browserOpts.Debug {
-	_ = logger.SetLevel("debug")
-	// }
+	if browserOpts.Debug {
+		_ = logger.SetLevel("debug")
+	}
 
 	return ctx, browserOpts, logger, nil
 }
@@ -176,7 +176,7 @@ func (b *BrowserType) Launch(ctx, vuCtx context.Context) (_ *common.Browser, bro
 		return nil, 0, fmt.Errorf("initializing browser type: %w", err)
 	}
 
-	fmt.Printf("Context %p VU Context %p: launching browser\n", ctx, vuCtx)
+	fmt.Printf("Context %v VU Context %v: launching browser\n", ctx, vuCtx)
 	bp, pid, err := b.launch(ctx, vuCtx, browserOpts, logger)
 	if err != nil {
 		err = &k6ext.UserFriendlyError{
@@ -280,6 +280,7 @@ func executablePath(
 	lookPath func(file string) (string, error), // os.LookPath
 ) (string, error) {
 	// find the browser executable in the user provided path
+	fmt.Printf("Looking for browser executable at path: %q\n", path)
 	if path := strings.TrimSpace(path); path != "" {
 		if _, err := lookPath(path); err == nil {
 			return path, nil

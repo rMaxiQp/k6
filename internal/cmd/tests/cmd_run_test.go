@@ -2376,7 +2376,12 @@ func TestBrowserPermissions(t *testing.T) {
 			cmd.ExecuteWithGlobalState(ts.GlobalState)
 			loglines := ts.LoggerHook.Drain()
 
+			for i, l := range loglines {
+				t.Logf("Log %d: %s", i, l.Message)
+			}
+
 			assert.Contains(t, loglines[0].Message, tt.expectedError)
+			// assert.True(t, testutils.LogContains(loglines, logrus.ErrorLevel, tt.expectedError))
 		})
 	}
 }
@@ -2410,7 +2415,13 @@ func TestBrowserExperimentalImport(t *testing.T) {
 	cmd.ExecuteWithGlobalState(ts.GlobalState)
 	loglines := ts.LoggerHook.Drain()
 
+	for i, l := range loglines {
+		t.Logf("Log %d: %s", i, l.Message)
+	}
+
 	assert.Contains(t, loglines[0].Message, "use k6/browser instead of k6/experimental/browser")
+
+	// assert.True(t, testutils.LogContains(loglines, logrus.ErrorLevel, "use k6/browser instead of k6/experimental/browser"))
 }
 
 func TestSetupTimeout(t *testing.T) {
